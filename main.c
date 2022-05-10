@@ -67,6 +67,15 @@ int main() {
 
         cipherDecode(inputString, firstRowIdx);
 
+        char table[100][100];
+        int k = firstRowIdx;
+        for (int i = 0; i < dimention; i++) {
+            for (int j = 0; j < dimention; j++)
+                table[i][j] = *(inputString + k + j);
+
+            k += 10;  // skipping the '#'
+        }
+
         int fd;
 
         // FIFO file path
