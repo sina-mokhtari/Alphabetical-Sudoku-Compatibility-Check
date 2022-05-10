@@ -11,6 +11,7 @@
 void removeExtras(char *s);
 void toLower(char *s);
 int setDHW(char *s, int *dimention, int *height, int *width);
+void cipherDecode(char *s, int firstRowIdx);
 
 int main() {
     int parentPid = getpid(), firstChildPid = -10, secondChildPid = -10,
@@ -39,27 +40,32 @@ int main() {
     } else
         firstChildPid = getpid();
 
-
-
     if (getpid() == parentPid) {
-        char *buffer = 0;
+        char *inputString = 0;
         long length;
+        int dimention, height, width;
+        int firstRowIdx;
+
         FILE *f = fopen("testcase1.txt", "rb");
 
         if (f) {
             fseek(f, 0, SEEK_END);
             length = ftell(f);
             fseek(f, 0, SEEK_SET);
-            buffer = malloc(length);
-            if (buffer) {
-                fread(buffer, 1, length, f);
+            inputString = malloc(length);  // needs to be freed
+            if (inputString) {
+                fread(inputString, 1, length, f);
             }
             fclose(f);
         }
-        removeExtras(buffer);
-        toLower(buffer);
-        int dimention = buffer[0], height = buffer[2], width = buffer[4];
-        setDHW(buffer, &dimention, &height, &width);
+
+        removeExtras(inputString);
+
+        toLower(inputString);
+
+        firstRowIdx = setDHW(inputString, &dimention, &height, &width);
+
+        cipherDecode(inputString, firstRowIdx);
 
         int fd;
 
@@ -72,7 +78,8 @@ int main() {
 
         fd = open(myfifo, O_WRONLY);
 
-        write(fd, buffer, strlen(buffer) + 1);
+        write(fd, inputString, strlen(inputString) + 1);
+
         close(fd);
 
         fd = open(myfifo, O_RDONLY);
@@ -147,7 +154,7 @@ void toLower(char *s) {
 int setDHW(char *s, int *dimention, int *height, int *width) {
     int i = 0, j;
     char temp[10];
-    while (*s) {
+    while (*(s + i)) {
         if (*(s + i) == '*') break;
         i++;
     }
@@ -156,7 +163,7 @@ int setDHW(char *s, int *dimention, int *height, int *width) {
     *dimention = atoi(temp);
 
     j = i + 1;
-    while (*s) {
+    while (*(s + j)) {
         if (*(s + j) == '*') break;
         j++;
     }
@@ -166,7 +173,7 @@ int setDHW(char *s, int *dimention, int *height, int *width) {
 
     i = j + 1;
 
-    while (*s) {
+    while (*(s + i)) {
         if (*(s + i) < 48 || *(s + i) > 57) break;
         i++;
     }
@@ -176,4 +183,19 @@ int setDHW(char *s, int *dimention, int *height, int *width) {
 
     // first row index in buffer
     return i;
+}
+
+void cipherDecode(char *s, int firstRowIdx) {
+    int i = firstRowIdx;
+    while (*(s + i)) {
+        if (*(s + i) != 35) {
+            if (*(s + i) > 98 && *(s + i) < 123)
+                *(s + i) -= 2;
+            else if (*(s + i) == 98)
+                *(s + i) = 122;
+            else if (*(s + i) == 97)
+                *(s + i) = 121;
+        }
+        i++;
+    }
 }
