@@ -14,14 +14,14 @@ int setDHW(char *s, int *dimention, int *height, int *width);
 void cipherDecode(char *s, int firstRowIdx);
 
 int main() {
-    int parentPid = getpid(), firstChildPid = -10, secondChildPid = -10,
+    int parentPid = getpid(), decoderChildPid = -10, secondChildPid = -10,
         thirdChildPid = -10, fourthChildPid = -10;
     int temp;
 
     int pid = fork();
 
     if (pid != 0) {
-        firstChildPid = pid;
+        decoderChildPid = pid;
         pid = fork();
         if (pid != 0) {
             secondChildPid = pid;
@@ -38,7 +38,7 @@ int main() {
         } else
             secondChildPid = getpid();
     } else
-        firstChildPid = getpid();
+        decoderChildPid = getpid();
 
     if (getpid() == parentPid) {
         char *inputString = 0;
@@ -65,16 +65,7 @@ int main() {
 
         firstRowIdx = setDHW(inputString, &dimention, &height, &width);
 
-        cipherDecode(inputString, firstRowIdx);
-
-        char table[100][100];
-        int k = firstRowIdx;
-        for (int i = 0; i < dimention; i++) {
-            for (int j = 0; j < dimention; j++)
-                table[i][j] = *(inputString + k + j);
-
-            k += 10;  // skipping the '#'
-        }
+        
 
         int fd;
 
@@ -87,6 +78,10 @@ int main() {
 
         fd = open(myfifo, O_WRONLY);
 
+        char tmp[2];
+        sprintf(tmp, "%d", firstRowIdx);
+        strcat(inputString, tmp);
+
         write(fd, inputString, strlen(inputString) + 1);
 
         close(fd);
@@ -95,12 +90,21 @@ int main() {
 
         read(fd, arr1, sizeof(arr1));
 
+         char table[100][100];
+         int k = firstRowIdx;
+         for (int i = 0; i < dimention; i++) {
+             for (int j = 0; j < dimention; j++)
+                 table[i][j] = *(arr1 + k + j);
+
+             k += 10;  // skipping the '#'
+         }
+
         printf("User2: %s\n", arr1);
         close(fd);
 
     }
 
-    else if (getpid() == firstChildPid) {
+    else if (getpid() == decoderChildPid) {
         //  char *args[] = {"./firstChild", NULL};
         // execv(args[0], args);
         int fd1;
@@ -121,8 +125,19 @@ int main() {
         // Print the read string and close
         // printf("User1: %s\n", str1);
         close(fd1);
-        strcat(str3, str1);
-        strcpy(str2, str3);
+
+        /*assumption : firstRowIdx 1 digit*/
+        char tmp[3];
+        // sprintf(tmp, "%d", )
+        // strcpy(tmp, str1[strlen(str1) - 1]);
+        char *pChar = &str1[strlen(str1) - 1];
+        int firstRowIdx = atoi(pChar);
+        str1[strlen(str1) - 1] = '\0';
+
+        cipherDecode(str1, firstRowIdx);
+
+        // strcat(str3, str1);
+        strcpy(str2, str1);
         // Now open in write mode and write
         // string taken from user.
         fd1 = open(myfifo, O_WRONLY);
