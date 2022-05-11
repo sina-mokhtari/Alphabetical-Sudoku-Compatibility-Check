@@ -72,7 +72,7 @@ int main() {
 
         mkfifo(myfifo, 0666);
 
-        char arr1[1000], arr2[80] = "yeay";
+        char arr1[1000], arr2[80], arr3[1000], arr4[1000];
 
         fd = open(myfifo, O_WRONLY);
 
@@ -89,42 +89,62 @@ int main() {
         read(fd, arr1, sizeof(arr1));
         close(fd);
 
-// second child
+        // second child
+        char myArr2[1000], myArr3[1000], myArr4[1000];
+        //strcpy(myArr2, arr1);
+        strcpy(myArr2, arr1);
+        strcpy(myArr3, arr1);
+        strcpy(myArr4, arr1);
         char *myfifo2 = "/tmp/myfifo2";
 
         mkfifo(myfifo2, 0666);
-
         fd = open(myfifo2, O_WRONLY);
         sprintf(tmp, "@%d$%d", firstRowIdx, dimention);
-        strcat(arr1, tmp);
-        write(fd, arr1, strlen(arr1) + 1);
+        strcat(myArr2, tmp);
+        write(fd, myArr2, strlen(myArr2) + 1);
         close(fd);
 
-char newStr[1000];
+        char newStr[1000];
         fd = open(myfifo2, O_RDONLY);
         read(fd, newStr, sizeof(newStr));
         close(fd);
 
-// third child
-char *myfifo3 = "/tmp/myfifo3";
+        // third child
+        char *myfifo3 = "/tmp/myfifo3";
 
         mkfifo(myfifo3, 0666);
 
         fd = open(myfifo3, O_WRONLY);
         sprintf(tmp, "@%d$%d", firstRowIdx, dimention);
-        strcat(arr1, tmp);
-        write(fd, arr1, strlen(arr1) + 1);
+        strcat(myArr3, tmp);
+        write(fd, myArr3, strlen(myArr3) + 1);
         close(fd);
 
-char newStr3[1000];
+        char newStr3[1000];
         fd = open(myfifo3, O_RDONLY);
         read(fd, newStr3, sizeof(newStr3));
         close(fd);
 
+        // fourth child
+        char *myfifo4 = "/tmp/myfifo4";
+
+        mkfifo(myfifo4, 0666);
+
+        fd = open(myfifo4, O_WRONLY);
+        sprintf(tmp, "@%d$%d!%d&%d", firstRowIdx, dimention, height, width);
+        strcat(myArr4, tmp);
+        write(fd, myArr4, strlen(myArr4) + 1);
+        close(fd);
+
+        char newStr4[1000];
+        fd = open(myfifo4, O_RDONLY);
+        read(fd, newStr4, sizeof(newStr4));
+        close(fd);
 
         printf("User2: %s\n", arr1);
-        printf("secondchild: %s\n",newStr);
-        printf("thirdchild: %s\n",newStr3);
+        printf("secondchild: %s\n", newStr);
+        printf("thirdchild: %s\n", newStr3);
+        printf("fourthchild: %s\n", newStr4);
 
     }
 
@@ -157,22 +177,24 @@ char newStr3[1000];
         for (i = 0; *(str1 + i); i++)
             if (*(str1 + i) == '@') break;
         i++;
+        // printf("\n%s\n", str1);
 
         char *pChar = str1 + i;
 
         int firstRowIdx = atoi(pChar);
 
         str1[i - 1] = '\0';
-
+        // printf("\n%s\n", str1);
         cipherDecode(str1, firstRowIdx);
+        // printf("\n%s\n", str1);
 
         // strcat(str3, str1);
-        strcpy(str2, str1);
+        // strcpy(str2, str1);
         // Now open in write mode and write
         // string taken from user.
         fd1 = open(myfifo, O_WRONLY);
         // fgets(str2, 80, stdin);
-        write(fd1, str2, strlen(str2) + 1);
+        write(fd1, str1, strlen(str1) + 1);
         close(fd1);
         // }
     } else if (getpid() == rowCheckChildPid) {
