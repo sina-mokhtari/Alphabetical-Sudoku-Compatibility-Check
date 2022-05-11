@@ -13,6 +13,7 @@ int main() {
     char compatible = 1;
     char string[1000];
 
+    /* starting pipe */
     char *myfifo = "/tmp/myfifo4";
     mkfifo(myfifo, 0666);
     int fd = open(myfifo, O_RDONLY);
@@ -21,12 +22,15 @@ int main() {
 
     firstRowIdx = setParams(string, &dimention, &height, &width);
 
+    /* creating a 2d array from the string */
     char table[100][100];
     int a = firstRowIdx;
     for (int b = 0; b < dimention; b++) {
         for (int c = 0; c < dimention; c++) table[b][c] = *(string + a + c);
-        a += 10;  // skipping the '#'
+        a += dimention + 1;  // skipping the '#'
     }
+
+    /* checking each sub rectangle */
     int p, q;
     for (int m = 0; m < dimention; m += height)
         for (int n = 0; n < dimention; n += width) {
@@ -43,6 +47,7 @@ int main() {
             }
         }
 
+    /* sending back the result */
     fd = open(myfifo, O_WRONLY);
     write(fd, &compatible, 1);
     close(fd);

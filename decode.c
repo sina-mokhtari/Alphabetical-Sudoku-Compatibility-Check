@@ -9,23 +9,27 @@
 void cipherDecode(char *s, int firstRowIdx);
 
 int main() {
+    int firstRowIdx;
     char string[1000];
 
+    /* starting pipe */
     char *myfifo = "/tmp/myfifo";
     mkfifo(myfifo, 0666);
     int fd = open(myfifo, O_RDONLY);
     read(fd, string, 1000);
     close(fd);
 
+    /* finding first row index */
     int j = 0;
     while (*(string + j)) {
         if (*(string + j) > 96 && *(string + j) < 123) break;
         j++;
     }
 
-    int firstRowIdx = j;
+    firstRowIdx = j;
     cipherDecode(string, firstRowIdx);
 
+    /* sending back the decoded string */
     fd = open(myfifo, O_WRONLY);
     write(fd, string, strlen(string) + 1);
     close(fd);
