@@ -8,7 +8,7 @@
 
 int main() {
     int fd1;
-    char compatible[6] = "true";
+    char compatible = 1;
 
     // FIFO file path
     char *myfifo = "/tmp/myfifo2";
@@ -65,17 +65,13 @@ int main() {
         for (int m = 0; m < dimention; m++)
             for (int n = m + 1; n < dimention; n++)
                 if (table[l][n] == table[l][m]) {
-                    strcpy(compatible, "false");
+                    compatible = 0;
                     break;
                 }
 
-    // strcat(str3, str1);
-    strcpy(str2, compatible);
-    // Now open in write mode and write
-    // string taken from user.
     fd1 = open(myfifo, O_WRONLY);
-    // fgets(str2, 80, stdin);
-    write(fd1, str2, strlen(str2) + 1);
+
+    write(fd1, &compatible, 1);
     close(fd1);
     return 0;
 }

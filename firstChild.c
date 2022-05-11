@@ -41,7 +41,14 @@ int main() {
 
     char *pChar = str1 + i;
 
+    int j = 0;
+    while (*(str1 + j)) {
+        if (*(str1 + j) > 96 && *(str1 + j) < 123) break;
+        j++;
+    }
+
     int firstRowIdx = atoi(pChar);
+    if (j != firstRowIdx) printf("Toff\n");
 
     str1[i - 1] = '\0';
     // printf("\n%s\n", str1);

@@ -13,7 +13,7 @@ int setDHW(char *s, int *dimention, int *height, int *width);
 int main() {
     int parentPid = getpid(), decoderChildPid = -10, rowCheckChildPid = -10,
         colCheckChildPid = -10, subRectCheckChildPid = -10;
-    int temp;
+    char tempStr[1000];
 
     int pid = fork();
 
@@ -64,17 +64,18 @@ int main() {
 
         int fd;
 
+        // first child
         // FIFO file path
         char *myfifo = "/tmp/myfifo";
 
         mkfifo(myfifo, 0666);
 
-        char arr1[1000], arr2[80], arr3[1000], arr4[1000];
+        char decodedString[1000], arr2[80], arr3[1000], arr4[1000];
 
         fd = open(myfifo, O_WRONLY);
 
-        char tmp[10];
-        sprintf(tmp, "@%d", firstRowIdx);
+        char tmp[100];
+        sprintf(tmp, "@%d$%d!%d&%d", firstRowIdx, dimention, height, width);
         strcat(inputString, tmp);
 
         write(fd, inputString, strlen(inputString) + 1);
@@ -83,27 +84,25 @@ int main() {
 
         fd = open(myfifo, O_RDONLY);
 
-        read(fd, arr1, sizeof(arr1));
+        read(fd, decodedString, sizeof(decodedString));
         close(fd);
 
         // second child
-        char myArr2[1000], myArr3[1000], myArr4[1000];
-        // strcpy(myArr2, arr1);
-        strcpy(myArr2, arr1);
-        strcpy(myArr3, arr1);
-        strcpy(myArr4, arr1);
+
+        strcpy(tempStr, decodedString);
+
         char *myfifo2 = "/tmp/myfifo2";
 
         mkfifo(myfifo2, 0666);
         fd = open(myfifo2, O_WRONLY);
-        sprintf(tmp, "@%d$%d", firstRowIdx, dimention);
-        strcat(myArr2, tmp);
-        write(fd, myArr2, strlen(myArr2) + 1);
+
+        strcat(tempStr, tmp);
+        write(fd, tempStr, strlen(tempStr) + 1);
         close(fd);
 
-        char newStr[1000];
+        char rowCompatible;
         fd = open(myfifo2, O_RDONLY);
-        read(fd, newStr, sizeof(newStr));
+        read(fd, &rowCompatible, 1);
         close(fd);
 
         // third child
@@ -112,14 +111,13 @@ int main() {
         mkfifo(myfifo3, 0666);
 
         fd = open(myfifo3, O_WRONLY);
-        sprintf(tmp, "@%d$%d", firstRowIdx, dimention);
-        strcat(myArr3, tmp);
-        write(fd, myArr3, strlen(myArr3) + 1);
+
+        write(fd, tempStr, strlen(tempStr) + 1);
         close(fd);
 
-        char newStr3[1000];
+        char colCompatible;
         fd = open(myfifo3, O_RDONLY);
-        read(fd, newStr3, sizeof(newStr3));
+        read(fd, &colCompatible, 1);
         close(fd);
 
         // fourth child
@@ -128,20 +126,24 @@ int main() {
         mkfifo(myfifo4, 0666);
 
         fd = open(myfifo4, O_WRONLY);
-        sprintf(tmp, "@%d$%d!%d&%d", firstRowIdx, dimention, height, width);
-        strcat(myArr4, tmp);
-        write(fd, myArr4, strlen(myArr4) + 1);
+
+        write(fd, tempStr, strlen(tempStr) + 1);
         close(fd);
 
-        char newStr4[1000];
+        char subRectCompatible;
         fd = open(myfifo4, O_RDONLY);
-        read(fd, newStr4, sizeof(newStr4));
+        read(fd, &subRectCompatible, 1);
         close(fd);
 
-        printf("User2: %s\n", arr1);
-        printf("secondchild: %s\n", newStr);
-        printf("thirdchild: %s\n", newStr3);
-        printf("fourthchild: %s\n", newStr4);
+        /*printf("User2: %s\n", decodedString);
+        printf("Row Compatible: %s\n", rowCompatible ? "yes" : "no");
+        printf("Column Compatible: %s\n", colCompatible ? "yes" : "no");
+        printf("Sub Rectangle Compatible: %s\n",
+               subRectCompatible ? "yes" : "no");*/
+
+        printf((rowCompatible && colCompatible && subRectCompatible)
+                   ? "Sudoku Puzzle constraints satisfied\n"
+                   : "Sudoku Puzzle is Wrong\n");
 
     }
 
