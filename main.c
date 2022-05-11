@@ -197,7 +197,7 @@ int setDHW(char *s, int *dimention, int *height, int *width) {
     }
 
     strncpy(temp, s + i + 1, j - i - 1);
-    *height = atoi(temp);
+    *width = atoi(temp);
 
     i = j + 1;
 
@@ -207,7 +207,7 @@ int setDHW(char *s, int *dimention, int *height, int *width) {
     }
 
     strncpy(temp, s + j + 1, i - j - 1);
-    *width = atoi(temp);
+    *height = atoi(temp);
 
     // first row index in buffer
     return i;
