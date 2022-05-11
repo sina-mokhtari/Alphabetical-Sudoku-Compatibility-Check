@@ -31,22 +31,25 @@ int main() {
 
     /* checking each sub rectangle */
     int o;
-    for (int i = 0; i < dimention; i += height)
-        for (int j = 0; j < dimention; j += width)
-            for (int k = 0; k < height; k++)
-                for (int l = 0; l < width; l++) {
+    for (int i = 0; i < dimention; i += width)
+        for (int j = 0; j < dimention; j += height)
+            for (int k = 0; k < width; k++)
+                for (int l = 0; l < height; l++) {
                     o = table[i + k][j + l];
-                    for (int m = 0; m < height; m++)
-                        for (int n = 0; n < width; n++)
+                    for (int m = 0; m < width; m++)
+                        for (int n = 0; n < height; n++)
                             if (o == table[i + m][j + n] &&
                                 (m != k || n != l)) {
                                 compatible = 0;
-                                k = m = height;  // to break out of all loops...
-                                l = width;       // .
+                                k = m = width;  // to break out of all loops...
+                                l = height;     // .
                                 i = j = dimention;  // .
+                             //   printf("\n--%c-- %d - %d - h:%d, w:%d\n", o, i,
+                              //         j, height, width);
                                 break;
                             }
                 }
+    //printf("\nd: %d, h:%d, w:%d\n", dimention, height, width);
 
     /* sending back the result */
     fd = open(myfifo, O_WRONLY);
@@ -72,8 +75,10 @@ int setParams(char *s, int *dimention, int *height, int *width) {
         j++;
     }
 
+    for (int k = 0; k < 10; k++) temp[k] = '\0';
+
     strncpy(temp, s + i + 1, j - i - 1);
-    *width = atoi(temp);
+    *height = atoi(temp);
 
     i = j + 1;
 
@@ -82,8 +87,10 @@ int setParams(char *s, int *dimention, int *height, int *width) {
         i++;
     }
 
+    for (int k = 0; k < 10; k++) temp[k] = '\0';
+
     strncpy(temp, s + j + 1, i - j - 1);
-    *height = atoi(temp);
+    *width = atoi(temp);
 
     // first row index in buffer
     return i;

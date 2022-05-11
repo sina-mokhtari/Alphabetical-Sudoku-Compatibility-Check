@@ -40,7 +40,7 @@ int main() {
         long length;
 
         /* converting file to string */
-        FILE *f = fopen("testcase1.txt", "rb");
+        FILE *f = fopen("testcase2.txt", "rb");
 
         if (f) {
             fseek(f, 0, SEEK_END);
