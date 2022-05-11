@@ -79,13 +79,17 @@ int main() {
     int p, q;
     for (int m = 0; m < dimention; m += height)
         for (int n = 0; n < dimention; n += width) {
-            p = table[m][n];
-            q = table[m][n + 1];
-            for (int o = 1; o < height; o++)
-                if (table[m + o][n] == p || table[m + o][n] == q ||
-                    table[m + o][n + 1] == p || table[m + o][n + 1] == q ||
-                    p == q)
-                    strcpy(compatible, "false");
+            for (int o = 0; o < height; o++) {
+                for (int r = 0; r < width; r++) {
+                    p = table[m + o][n + r];
+                    for (int s = 0; s < height; s++) {
+                        for (int t = 0; t < width; t++) {
+                            if (p == table[m + s][n + t] && (s != o || t != r))
+                                strcpy(compatible, "false");
+                        }
+                    }
+                }
+            }
         }
     // strcat(str3, str1);
     char temp[15];
