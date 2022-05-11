@@ -89,6 +89,7 @@ int main() {
         read(fd, arr1, sizeof(arr1));
         close(fd);
 
+// second child
         char *myfifo2 = "/tmp/myfifo2";
 
         mkfifo(myfifo2, 0666);
@@ -104,8 +105,26 @@ char newStr[1000];
         read(fd, newStr, sizeof(newStr));
         close(fd);
 
+// third child
+char *myfifo3 = "/tmp/myfifo3";
+
+        mkfifo(myfifo3, 0666);
+
+        fd = open(myfifo3, O_WRONLY);
+        sprintf(tmp, "@%d$%d", firstRowIdx, dimention);
+        strcat(arr1, tmp);
+        write(fd, arr1, strlen(arr1) + 1);
+        close(fd);
+
+char newStr3[1000];
+        fd = open(myfifo3, O_RDONLY);
+        read(fd, newStr3, sizeof(newStr3));
+        close(fd);
+
+
         printf("User2: %s\n", arr1);
         printf("secondchild: %s\n",newStr);
+        printf("thirdchild: %s\n",newStr3);
 
     }
 

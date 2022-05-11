@@ -61,7 +61,6 @@ int main() {
         k += 10;  // skipping the '#'
     }
 
-    char temp;
     for (int l = 0; l < dimention; l++)
         for (int m = 0; m < dimention; m++)
             for (int n = m + 1; n < dimention; n++)
