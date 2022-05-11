@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 int setParams(char *s, int *dimention, int *height, int *width);
@@ -31,21 +30,23 @@ int main() {
     }
 
     /* checking each sub rectangle */
-    int p, q;
-    for (int m = 0; m < dimention; m += height)
-        for (int n = 0; n < dimention; n += width) {
-            for (int o = 0; o < height; o++) {
-                for (int r = 0; r < width; r++) {
-                    p = table[m + o][n + r];
-                    for (int s = 0; s < height; s++) {
-                        for (int t = 0; t < width; t++) {
-                            if (p == table[m + s][n + t] && (s != o || t != r))
+    int o;
+    for (int i = 0; i < dimention; i += height)
+        for (int j = 0; j < dimention; j += width)
+            for (int k = 0; k < height; k++)
+                for (int l = 0; l < width; l++) {
+                    o = table[i + k][j + l];
+                    for (int m = 0; m < height; m++)
+                        for (int n = 0; n < width; n++)
+                            if (o == table[i + m][j + n] &&
+                                (m != k || n != l)) {
                                 compatible = 0;
-                        }
-                    }
+                                k = m = height;  // to break out of all loops...
+                                l = width;       // .
+                                i = j = dimention;  // .
+                                break;
+                            }
                 }
-            }
-        }
 
     /* sending back the result */
     fd = open(myfifo, O_WRONLY);

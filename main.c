@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 void removeExtras(char *s);
@@ -110,12 +109,6 @@ int main() {
         read(fd, &subRectCompatible, 1);
         close(fd);
         /*  sub rect child communication end */
-
-        /*printf("User2: %s\n", decodedString);
-        printf("Row Compatible: %s\n", rowCompatible ? "yes" : "no");
-        printf("Column Compatible: %s\n", colCompatible ? "yes" : "no");
-        printf("Sub Rectangle Compatible: %s\n",
-               subRectCompatible ? "yes" : "no");*/
 
         printf((rowCompatible && colCompatible && subRectCompatible)
                    ? "Sudoku Puzzle constraints satisfied\n"

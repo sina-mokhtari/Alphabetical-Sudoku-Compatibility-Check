@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 void setParams(char *string, int *dimention, int *firstRowIdx);
@@ -36,6 +35,7 @@ int main() {
             for (int n = m + 1; n < dimention; n++)
                 if (table[l][n] == table[l][m]) {
                     compatible = 0;
+                    l = m = dimention;  // to break out of all loops
                     break;
                 }
 
