@@ -8,12 +8,11 @@
 
 void removeExtras(char *s);
 void toLower(char *s);
-int setDHW(char *s, int *dimention, int *height, int *width);
 
 int main() {
     int parentPid = getpid(), decoderChildPid = -10, rowCheckChildPid = -10,
         colCheckChildPid = -10, subRectCheckChildPid = -10;
-    char tempStr[1000];
+    char strWithSuffix[1000];
 
     int pid = fork();
 
@@ -38,10 +37,8 @@ int main() {
         decoderChildPid = getpid();
 
     if (getpid() == parentPid) {
-        char *inputString = 0;
+        char *inputString, decodedString[1000];
         long length;
-        int dimention, height, width;
-        int firstRowIdx;
 
         FILE *f = fopen("testcase1.txt", "rb");
 
@@ -57,47 +54,24 @@ int main() {
         }
 
         removeExtras(inputString);
-
         toLower(inputString);
 
-        firstRowIdx = setDHW(inputString, &dimention, &height, &width);
-
-        int fd;
-
-        // first child
-        // FIFO file path
+        //  first child
         char *myfifo = "/tmp/myfifo";
-
         mkfifo(myfifo, 0666);
-
-        char decodedString[1000], arr2[80], arr3[1000], arr4[1000];
-
-        fd = open(myfifo, O_WRONLY);
-
-        char tmp[100];
-        sprintf(tmp, "@%d$%d!%d&%d", firstRowIdx, dimention, height, width);
-        strcat(inputString, tmp);
-
+        int fd = open(myfifo, O_WRONLY);
         write(fd, inputString, strlen(inputString) + 1);
-
         close(fd);
 
         fd = open(myfifo, O_RDONLY);
-
         read(fd, decodedString, sizeof(decodedString));
         close(fd);
 
         // second child
-
-        strcpy(tempStr, decodedString);
-
         char *myfifo2 = "/tmp/myfifo2";
-
         mkfifo(myfifo2, 0666);
         fd = open(myfifo2, O_WRONLY);
-
-        strcat(tempStr, tmp);
-        write(fd, tempStr, strlen(tempStr) + 1);
+        write(fd, decodedString, strlen(decodedString) + 1);
         close(fd);
 
         char rowCompatible;
@@ -107,12 +81,9 @@ int main() {
 
         // third child
         char *myfifo3 = "/tmp/myfifo3";
-
         mkfifo(myfifo3, 0666);
-
         fd = open(myfifo3, O_WRONLY);
-
-        write(fd, tempStr, strlen(tempStr) + 1);
+        write(fd, decodedString, strlen(decodedString) + 1);
         close(fd);
 
         char colCompatible;
@@ -122,12 +93,9 @@ int main() {
 
         // fourth child
         char *myfifo4 = "/tmp/myfifo4";
-
         mkfifo(myfifo4, 0666);
-
         fd = open(myfifo4, O_WRONLY);
-
-        write(fd, tempStr, strlen(tempStr) + 1);
+        write(fd, decodedString, strlen(decodedString) + 1);
         close(fd);
 
         char subRectCompatible;
@@ -150,7 +118,6 @@ int main() {
     else if (getpid() == decoderChildPid) {
         char *args[] = {"./firstChild", NULL};
         execv(args[0], args);
-
     } else if (getpid() == rowCheckChildPid) {
         char *args[] = {"./secondChild", NULL};
         execv(args[0], args);
@@ -161,8 +128,6 @@ int main() {
         char *args[] = {"./fourthChild", NULL};
         execv(args[0], args);
     }
-
-    //                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            printf("parentPid : %d | firstChildPid : %d | secondChidPid : %d || currentPid : %d\n", parentPid, firstChildPid, secondChildPid, getpid());
     return 0;
 }
 
@@ -179,38 +144,4 @@ void toLower(char *s) {
         if (*s > 64 && *s < 91) *s += 32;
         s++;
     }
-}
-
-int setDHW(char *s, int *dimention, int *height, int *width) {
-    int i = 0, j;
-    char temp[10];
-    while (*(s + i)) {
-        if (*(s + i) == '*') break;
-        i++;
-    }
-
-    strncpy(temp, s, i);
-    *dimention = atoi(temp);
-
-    j = i + 1;
-    while (*(s + j)) {
-        if (*(s + j) == '*') break;
-        j++;
-    }
-
-    strncpy(temp, s + i + 1, j - i - 1);
-    *width = atoi(temp);
-
-    i = j + 1;
-
-    while (*(s + i)) {
-        if (*(s + i) < 48 || *(s + i) > 57) break;
-        i++;
-    }
-
-    strncpy(temp, s + j + 1, i - j - 1);
-    *height = atoi(temp);
-
-    // first row index in buffer
-    return i;
 }
