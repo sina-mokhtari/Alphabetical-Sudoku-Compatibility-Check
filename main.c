@@ -14,8 +14,8 @@ int setDHW(char *s, int *dimention, int *height, int *width);
 void cipherDecode(char *s, int firstRowIdx);
 
 int main() {
-    int parentPid = getpid(), decoderChildPid = -10, secondChildPid = -10,
-        thirdChildPid = -10, fourthChildPid = -10;
+    int parentPid = getpid(), decoderChildPid = -10, rowCheckChildPid = -10,
+        colCheckChildPid = -10, subRectCheckChildPid = -10;
     int temp;
 
     int pid = fork();
@@ -24,19 +24,19 @@ int main() {
         decoderChildPid = pid;
         pid = fork();
         if (pid != 0) {
-            secondChildPid = pid;
+            rowCheckChildPid = pid;
             pid = fork();
             if (pid != 0) {
-                thirdChildPid = pid;
+                colCheckChildPid = pid;
                 pid = fork();
                 if (pid != 0) {
-                    fourthChildPid = pid;
+                    subRectCheckChildPid = pid;
                 } else
-                    fourthChildPid = getpid();
+                    subRectCheckChildPid = getpid();
             } else
-                thirdChildPid = getpid();
+                colCheckChildPid = getpid();
         } else
-            secondChildPid = getpid();
+            rowCheckChildPid = getpid();
     } else
         decoderChildPid = getpid();
 
@@ -65,8 +65,6 @@ int main() {
 
         firstRowIdx = setDHW(inputString, &dimention, &height, &width);
 
-        
-
         int fd;
 
         // FIFO file path
@@ -78,8 +76,8 @@ int main() {
 
         fd = open(myfifo, O_WRONLY);
 
-        char tmp[2];
-        sprintf(tmp, "%d", firstRowIdx);
+        char tmp[10];
+        sprintf(tmp, "@%d", firstRowIdx);
         strcat(inputString, tmp);
 
         write(fd, inputString, strlen(inputString) + 1);
@@ -89,18 +87,25 @@ int main() {
         fd = open(myfifo, O_RDONLY);
 
         read(fd, arr1, sizeof(arr1));
+        close(fd);
 
-         char table[100][100];
-         int k = firstRowIdx;
-         for (int i = 0; i < dimention; i++) {
-             for (int j = 0; j < dimention; j++)
-                 table[i][j] = *(arr1 + k + j);
+        char *myfifo2 = "/tmp/myfifo2";
 
-             k += 10;  // skipping the '#'
-         }
+        mkfifo(myfifo2, 0666);
+
+        fd = open(myfifo2, O_WRONLY);
+        sprintf(tmp, "@%d$%d", firstRowIdx, dimention);
+        strcat(arr1, tmp);
+        write(fd, arr1, strlen(arr1) + 1);
+        close(fd);
+
+char newStr[1000];
+        fd = open(myfifo2, O_RDONLY);
+        read(fd, newStr, sizeof(newStr));
+        close(fd);
 
         printf("User2: %s\n", arr1);
-        close(fd);
+        printf("secondchild: %s\n",newStr);
 
     }
 
@@ -127,12 +132,18 @@ int main() {
         close(fd1);
 
         /*assumption : firstRowIdx 1 digit*/
-        char tmp[3];
         // sprintf(tmp, "%d", )
         // strcpy(tmp, str1[strlen(str1) - 1]);
-        char *pChar = &str1[strlen(str1) - 1];
+        int i;
+        for (i = 0; *(str1 + i); i++)
+            if (*(str1 + i) == '@') break;
+        i++;
+
+        char *pChar = str1 + i;
+
         int firstRowIdx = atoi(pChar);
-        str1[strlen(str1) - 1] = '\0';
+
+        str1[i - 1] = '\0';
 
         cipherDecode(str1, firstRowIdx);
 
@@ -145,13 +156,13 @@ int main() {
         write(fd1, str2, strlen(str2) + 1);
         close(fd1);
         // }
-    } else if (getpid() == secondChildPid) {
+    } else if (getpid() == rowCheckChildPid) {
         char *args[] = {"./secondChild", NULL};
         execv(args[0], args);
-    } else if (getpid() == thirdChildPid) {
+    } else if (getpid() == colCheckChildPid) {
         char *args[] = {"./thirdChild", NULL};
         execv(args[0], args);
-    } else if (getpid() == fourthChildPid) {
+    } else if (getpid() == subRectCheckChildPid) {
         char *args[] = {"./fourthChild", NULL};
         execv(args[0], args);
     }
